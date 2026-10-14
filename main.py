@@ -1,7 +1,9 @@
-
 import requests
 from datetime import datetime
 import smtplib
+import os
+from dotenv import load_dotenv
+
 
 
 # Find iss and return position  @lng and @lat
@@ -29,10 +31,12 @@ def is_dark():
         return True
     else:
         return False
-
-MY_EMAIL = "testforpython113@gmail.com"
-MY_PASSWORD = "kwtd ffdo lyoa jyax"
-MY_LOCATION = (34.070862,-84.272986)
+load_dotenv()
+MY_EMAIL = os.environ.get("MY_EMAIL")
+MY_PASSWORD = os.environ.get("MY_PASSWORD")
+LATITUDE = float(os.environ.get("LATITUDE","0.0"))
+LONGITUDE = float(os.environ.get("LONGITUDE","0.0"))
+MY_LOCATION = (LATITUDE,LONGITUDE)
 parameters = {'lat':MY_LOCATION[0],
               'lng': MY_LOCATION[1],
               'formatted': 0,
@@ -43,7 +47,7 @@ iss_location = find_iss()
 if MY_LOCATION[0]-5 < iss_location[0] < MY_LOCATION[0] +5:
     if is_dark():
 
-        with smtplib.SMTP("smtp.gmail.com") as connection:
+        with smtplib.SMTP("smtp.gmail.com", 587) as connection:
             connection.starttls()
             connection.login(user=MY_EMAIL, password=MY_PASSWORD)
             connection.sendmail(from_addr=MY_EMAIL,to_addrs='gedeonfikru@gmail.com',
