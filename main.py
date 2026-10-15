@@ -27,13 +27,14 @@ def is_dark():
     print("Sunrise: ", sunrise)
     print("Sunset: ", sunset)
     print("Time now: ", time_now)
-    if sunrise < time_now < sunset:
+    if sunrise > time_now or time_now > sunset:
         return True
     else:
         return False
 load_dotenv()
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MY_PASSWORD = os.environ.get("MY_PASSWORD")
+SEND_TO = os.environ.get("SEND_TO")
 LATITUDE = float(os.environ.get("LATITUDE","0.0"))
 LONGITUDE = float(os.environ.get("LONGITUDE","0.0"))
 MY_LOCATION = (LATITUDE,LONGITUDE)
@@ -42,26 +43,24 @@ parameters = {'lat':MY_LOCATION[0],
               'formatted': 0,
               'tzid':'America/New_York'}
 time_now = datetime.now().hour
-iss_location = find_iss()
+iss_location = find_iss()   # returned as (lat,lng)
 
-if MY_LOCATION[0]-5 < iss_location[0] < MY_LOCATION[0] +5:
-    if is_dark():
+#open email connection
+with smtplib.SMTP("smtp.gmail.com") as connection:
+    connection.starttls()
+    connection.login(user=MY_EMAIL, password=MY_PASSWORD)
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as connection:
-            connection.starttls()
-            connection.login(user=MY_EMAIL, password=MY_PASSWORD)
-            connection.sendmail(from_addr=MY_EMAIL,to_addrs='gedeonfikru@gmail.com',
-                            msg="Subject:ISS overhead\n\nLook up, the International space station is overhead")
-    if not is_dark():
-        with smtplib.SMTP("smtp.gmail.com") as connection:
-            connection.starttls()
-            connection.login(user=MY_EMAIL, password=MY_PASSWORD)
-            connection.sendmail(from_addr=MY_EMAIL, to_addrs='gedeonfikru@gmail.com',
-                            msg="Subject:Too bad you can't see it\n\nTest complete")
-else:
-    with smtplib.SMTP("smtp.gmail.com") as connection:
-        connection.starttls()
-        connection.login(user=MY_EMAIL, password=MY_PASSWORD)
-        connection.sendmail(from_addr=MY_EMAIL, to_addrs='gedeonfikru@gmail.com',
-                            msg="Subject: Test 2\n\nTest done")
+    # if the iss is between 5 degrees below and 5 degrees above my longitude position
+    if MY_LOCATION[1]-10 < iss_location[1] < MY_LOCATION[1] +10:
+        if is_dark():
+            connection.sendmail(from_addr=MY_EMAIL,to_addrs=SEND_TO,
+                                msg=f"Subject:Look up ISS overhead\n\nThe International space station is overhead\n{iss_location}")
+        if not is_dark():
+            connection.sendmail(from_addr=MY_EMAIL, to_addrs=SEND_TO,
+                                msg=f"Subject: Test 1\n\niss overhead at {iss_location}, too bad you can't see it")
+    else:
+
+        connection.sendmail(from_addr=MY_EMAIL, to_addrs=SEND_TO,
+                                msg="Subject: Test 2\n\nTest done! Checked for iss position."
+                                    f"\n{iss_location}\nYour position {MY_LOCATION}")
 
