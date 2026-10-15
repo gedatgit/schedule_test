@@ -27,4 +27,5 @@ jobs:
           MY_PASSWORD: ${{ secrets.MY_PASSWORD }}
           LATITUDE: ${{ secrets.LATITUDE }}
           LONGITUDE: ${{ secrets.LONGITUDE }}
+          SEND_TO: ${{ secrets.SEND_TO }}
         run: python main.py
